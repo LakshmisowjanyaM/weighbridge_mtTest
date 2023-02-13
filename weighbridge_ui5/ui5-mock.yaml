@@ -1,0 +1,44 @@
+specVersion: "2.5"
+metadata:
+  name: weighbridgeui5
+type: application
+server:
+  customMiddleware:
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertError: false
+        ui5:
+          path:
+            - /resources
+            - /test-resources
+          url: https://ui5.sap.com
+        backend:
+          - path: /sap
+            url: http://btpmotiveminds.com:8012
+            client: "100"
+            destination: motivemindsS4Hana
+          - path: /sap
+            url: https://32e83ad2-f20f-4343-b53c-44b75c846136.abap.ap10.hana.ondemand.com
+            destination: abap-cloud-mmdev-motiveminds_consulting-private-limited_n7mwhzx2bvczjz3l-dev
+            scp: true
+    - name: fiori-tools-appreload
+      afterMiddleware: compression
+      configuration:
+        port: 35729
+        path: webapp
+        delay: 300
+    - name: sap-fe-mockserver
+      beforeMiddleware: csp
+      configuration:
+        mountPath: /
+        services:
+          - urlPath: /sap/opu/odata/sap/ZPURCHASEITEMS_SRV
+            generateMockData: true
+            metadataXmlPath: ./webapp/localService/mainService/metadata.xml
+            mockdataRootPath: ./webapp/localService/data
+          - urlPath: /sap/opu/odata/sap/ZSB_WEIGHBRIDGE
+            metadataPath: ./webapp/localService/ZSB_WEIGHBRIDGE/metadata.xml
+            mockdataPath: ./webapp/localService/ZSB_WEIGHBRIDGE/mockdata
+            generateMockData: true
+        annotations: []

@@ -1,0 +1,36 @@
+{
+  "xsappname": "weighbridge_mttest",
+  "tenant-mode": "shared",
+  "description": "Security profile of called application",
+  "scopes": [
+    {
+        "name": "$XSAPPNAME.Callback",
+        "description": "With this scope set, the callbacks for tenant onboarding, offboarding and getDependencies can be called.",
+        "grant-as-authority-to-apps": [
+            "$XSAPPNAME(application,sap-provisioning,tenant-onboarding)"
+        ]
+    },
+    {
+        "name": "$XSAPPNAME.AdminTest",
+        "description": "AdminTest"
+    }
+],
+"role-templates": [
+    {
+        "name": "AdminTest",
+        "description": "AdminTest",
+        "scope-references": [
+            "$XSAPPNAME.AdminTest"
+        ]
+    }
+],
+"role-collections": [
+    {
+        "name": "testMultiTenant_AdminTest",
+        "description": "MultiTenantTest AdminTest",
+        "role-template-references": [
+            "$XSAPPNAME.AdminTest"
+        ]
+    }
+]
+}

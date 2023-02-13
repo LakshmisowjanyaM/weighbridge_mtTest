@@ -1,0 +1,112 @@
+_schema-version: "3.2"
+ID: weighbridge_mtTest
+version: 0.0.1
+parameters:
+  subdomain: n7mwhzx2bvczjz3l
+  deploy_mode: html5-repo
+modules:
+- name: weighbridge-mttest-approuter
+  type: approuter.nodejs
+  path: weighbridge-mttest-approuter    
+  build-parameters:
+    ignore:
+      - default-*.json
+      - .env
+      - "*node_modules*"
+      - package-lock.json
+  properties:
+    TENANT_HOST_PATTERN: "^(.*)-weighbridge_mttest.${default-domain}"
+  requires:
+  - name: weighbridge_mtTest_html_repo_runtime
+  - name: uaa_weighbridge_mtTest
+  - name: weighbridge_mtTest-registry
+  - name: weighbridge_mtTest-destination-service
+    group: destinations
+    properties:
+      forwardAuthToken: false
+      name: ui5
+      url: https://ui5.sap.com
+  parameters:
+    disk-quota: 256M
+    memory: 256M
+    host: weighbridge_mttest
+    domain: ${default-domain}
+- name: weighbridge_mtTest_ui_deployer
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: weighbridge_mtTest_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - weighbridgeui5.zip
+      name: weighbridgeui5
+      target-path: resources/
+- name: weighbridgeui5
+  type: html5
+  path: weighbridge_ui5
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: weighbridge_mtTest-registry
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: saas-registry
+    service-plan: application
+    service-name: weighbridge_mtTest-registry
+    config:
+      xsappname: weighbridge_mttest
+      appName: weighbridge_mttest
+      displayName: 'testMultiTenantWeighBridge'
+      description: 'testMultiTenantWeighBridgeApps'
+      category: 'WeighBridgeMultiTenanceApps'
+      appUrls:
+        onSubscription: https://${subdomain}-weighbridge_mttest.${default-domain}/callback/v1.0/tenants/{tenantId}
+        onSubscriptionAsync: false
+        onUnSubscriptionAsync: false
+        callbackTimeoutMillis: 300000
+- name: weighbridge_mtTest_html_repo_runtime
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+- name: uaa_weighbridge_mtTest
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: weighbridge_mtTest-xsuaa-service
+    service-plan: application
+- name: weighbridge_mtTest_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+- name: weighbridge_mtTest-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: false
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: weighbridge_mtTest-destination-service
+    service-plan: lite
+
+
